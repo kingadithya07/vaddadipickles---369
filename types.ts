@@ -24,7 +24,8 @@ export interface Order {
   id: string;
   user_id: string;
   total_amount: number;
-  status: 'pending' | 'approved' | 'shipped' | 'delivered' | 'rejected';
+  status: 'pending' | 'payment_pending' | 'approved' | 'shipped' | 'delivered' | 'cancelled';
+  payment_method?: 'upi' | 'cod';
   shipping_address: string;
   utr_reference: string;
   payment_screenshot_url?: string;

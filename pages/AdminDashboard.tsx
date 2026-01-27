@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '../supabase';
 import { Order, Expense } from '../types';
-import { ExternalLink, Check, X, Truck, PackageCheck, TrendingUp, TrendingDown, Wallet, Plus, Trash2, Calendar, BarChart2 } from 'lucide-react';
+import { ExternalLink, Check, X, Truck, PackageCheck, TrendingUp, TrendingDown, Wallet, Plus, Trash2, Calendar, BarChart2, FileText, Tag, Printer } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { 
   ComposedChart, 
   Bar, 
@@ -10,8 +11,8 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  ResponsiveContainer,
-  Line
+  ResponsiveContainer, 
+  Line 
 } from 'recharts';
 
 export const AdminDashboard: React.FC = () => {
@@ -84,6 +85,11 @@ export const AdminDashboard: React.FC = () => {
     if (!error) {
       // Optimistic update
       setOrders(orders.map(o => o.id === id ? { ...o, status: status as any } : o));
+
+      // Auto open label on approval
+      if (status === 'approved') {
+        window.open(`#/order/${id}/label`, '_blank');
+      }
     }
   };
 
@@ -238,93 +244,122 @@ export const AdminDashboard: React.FC = () => {
       </div>
       
       {activeTab === 'orders' ? (
-        <div className="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold border-b">
-              <tr>
-                <th className="px-6 py-4">Order Info</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Payment (UTR)</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {orders.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="font-bold">#{order.id.slice(0,8)}</div>
-                    <div className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</div>
-                    <div className="font-bold text-brand-600 mt-1">₹{order.total_amount}</div>
-                    {order.discount_amount && order.discount_amount > 0 && (
-                       <div className="text-xs text-green-600 mt-0.5">
-                         Includes ₹{order.discount_amount} discount ({order.coupon_code})
-                       </div>
-                    )}
-                    <div className="text-xs mt-1">
-                      {order.items.length} items
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium">{(order as any).profile?.full_name || 'Unknown'}</div>
-                    <div className="text-gray-500 text-xs">{(order as any).profile?.email}</div>
-                    <div className="text-xs text-gray-400 mt-1 max-w-[150px] truncate" title={order.shipping_address}>
-                      {order.shipping_address}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-mono bg-gray-100 px-2 py-1 rounded inline-block text-xs">
-                      {order.utr_reference}
-                    </div>
-                    {order.payment_screenshot_url && (
-                      <a 
-                        href={order.payment_screenshot_url} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-blue-600 text-xs mt-2 hover:underline"
-                      >
-                        <ExternalLink size={12} /> View Proof
-                      </a>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase
-                      ${order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                        order.status === 'approved' ? 'bg-blue-100 text-blue-800' : 
-                        order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      {order.status === 'pending' && (
-                        <>
-                          <button onClick={() => updateStatus(order.id, 'approved')} className="p-2 bg-green-100 text-green-700 rounded hover:bg-green-200" title="Approve">
-                            <Check size={16} />
-                          </button>
-                          <button onClick={() => updateStatus(order.id, 'rejected')} className="p-2 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Reject">
-                            <X size={16} />
-                          </button>
-                        </>
-                      )}
-                      {order.status === 'approved' && (
-                        <button onClick={() => updateStatus(order.id, 'shipped')} className="p-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200" title="Mark Shipped">
-                          <Truck size={16} />
-                        </button>
-                      )}
-                      {order.status === 'shipped' && (
-                        <button onClick={() => updateStatus(order.id, 'delivered')} className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="Mark Delivered">
-                          <PackageCheck size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <div className="space-y-4">
+          {/* Action Header for Orders */}
+          <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+             <h2 className="text-lg font-bold flex items-center gap-2">
+               Recent Orders
+             </h2>
+             <Link 
+               to="/admin/bulk-labels" 
+               className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-gray-800 transition"
+             >
+               <Printer size={16} /> Bulk Print Labels
+             </Link>
+          </div>
+
+          <div className="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold border-b">
+                <tr>
+                  <th className="px-6 py-4">Order Info</th>
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Payment (UTR)</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {orders.map(order => (
+                  <tr key={order.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="font-bold">#{order.id.slice(0,8)}</div>
+                      <div className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</div>
+                      <div className="font-bold text-brand-600 mt-1">₹{order.total_amount}</div>
+                      {order.discount_amount && order.discount_amount > 0 && (
+                         <div className="text-xs text-green-600 mt-0.5">
+                           Includes ₹{order.discount_amount} discount ({order.coupon_code})
+                         </div>
+                      )}
+                      <div className="text-xs mt-1">
+                        {order.items.length} items
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{(order as any).profile?.full_name || 'Unknown'}</div>
+                      <div className="text-gray-500 text-xs">{(order as any).profile?.email}</div>
+                      <div className="text-xs text-gray-400 mt-1 max-w-[150px] truncate" title={order.shipping_address}>
+                        {order.shipping_address}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-mono bg-gray-100 px-2 py-1 rounded inline-block text-xs">
+                        {order.utr_reference}
+                      </div>
+                      {order.payment_screenshot_url && (
+                        <a 
+                          href={order.payment_screenshot_url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="flex items-center gap-1 text-blue-600 text-xs mt-2 hover:underline"
+                        >
+                          <ExternalLink size={12} /> View Proof
+                        </a>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase
+                        ${order.status === 'pending' || order.status === 'payment_pending' ? 'bg-yellow-100 text-yellow-800' : 
+                          order.status === 'approved' ? 'bg-blue-100 text-blue-800' : 
+                          order.status === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'}`}>
+                        {order.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        {(order.status === 'pending' || order.status === 'payment_pending') && (
+                          <>
+                            <button onClick={() => updateStatus(order.id, 'approved')} className="p-2 bg-green-100 text-green-700 rounded hover:bg-green-200" title="Approve">
+                              <Check size={16} />
+                            </button>
+                            <button onClick={() => updateStatus(order.id, 'cancelled')} className="p-2 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Cancel Order">
+                              <X size={16} />
+                            </button>
+                          </>
+                        )}
+                        {order.status === 'approved' && (
+                          <button onClick={() => updateStatus(order.id, 'shipped')} className="p-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200" title="Mark Shipped">
+                            <Truck size={16} />
+                          </button>
+                        )}
+                        {order.status === 'shipped' && (
+                          <button onClick={() => updateStatus(order.id, 'delivered')} className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" title="Mark Delivered">
+                            <PackageCheck size={16} />
+                          </button>
+                        )}
+                         <Link 
+                          to={`/order/${order.id}/invoice`}
+                          className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" 
+                          title="View Invoice"
+                        >
+                          <FileText size={16} />
+                        </Link>
+                        <Link 
+                          to={`/order/${order.id}/label`}
+                          className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" 
+                          title="Print Shipping Label"
+                        >
+                          <Tag size={16} />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <div className="space-y-8">

@@ -8,8 +8,17 @@ import { ProductDetail } from './pages/ProductDetail';
 import { Cart } from './pages/Cart';
 import { Checkout } from './pages/Checkout';
 import { Orders } from './pages/Orders';
+import { OrderSuccess } from './pages/OrderSuccess';
+import { PaymentStatus } from './pages/PaymentStatus';
+import { OrderInvoice } from './pages/OrderInvoice';
+import { ShippingLabel } from './pages/ShippingLabel';
+import { BulkLabels } from './pages/BulkLabels';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { Login } from './pages/Login';
+import { AuthSuccess } from './pages/AuthSuccess';
+import { PasswordChanged } from './pages/PasswordChanged';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { UpdatePassword } from './pages/UpdatePassword';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { RefundPolicy } from './pages/RefundPolicy';
 import { TermsConditions } from './pages/TermsConditions';
@@ -73,10 +82,19 @@ const App: React.FC = () => {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+            <Route path="/auth/success" element={<AuthSuccess />} />
+            <Route path="/auth/password-changed" element={<PasswordChanged />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
             
             {/* Protected Routes */}
             <Route path="/checkout" element={user ? <Checkout user={user} /> : <Navigate to="/login" />} />
+            <Route path="/order/success" element={user ? <OrderSuccess /> : <Navigate to="/login" />} />
+            <Route path="/payment/status" element={user ? <PaymentStatus /> : <Navigate to="/login" />} />
             <Route path="/orders" element={user ? <Orders user={user} /> : <Navigate to="/login" />} />
+            <Route path="/order/:id/invoice" element={user ? <OrderInvoice /> : <Navigate to="/login" />} />
+            <Route path="/order/:id/label" element={user?.role === 'admin' ? <ShippingLabel /> : <Navigate to="/" />} />
+            <Route path="/admin/bulk-labels" element={user?.role === 'admin' ? <BulkLabels /> : <Navigate to="/" />} />
             
             {/* Admin Route */}
             <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />

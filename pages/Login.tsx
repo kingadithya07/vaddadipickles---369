@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
         if (error) throw error;
         
         if (data.session) {
-           navigate('/');
+           navigate('/auth/success');
         } else if (data.user) {
            setMessage('Registration successful! Please check your email to confirm your account.');
            setIsRegistering(false); 
@@ -45,7 +45,7 @@ export const Login: React.FC = () => {
         });
         
         if (error) throw error;
-        navigate('/');
+        navigate('/auth/success');
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -100,7 +100,14 @@ export const Login: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <div className="flex justify-between items-center mb-1">
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            {!isRegistering && (
+              <Link to="/forgot-password" className="text-xs font-semibold text-brand-600 hover:text-brand-800">
+                Forgot Password?
+              </Link>
+            )}
+          </div>
           <input 
             type="password" 
             value={password}

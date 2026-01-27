@@ -237,6 +237,7 @@ ${selectedAddr.alternate_phone ? `Alt Phone: ${selectedAddr.alternate_phone}` : 
           user_id: user.id,
           total_amount: finalTotal, // Use final total after discount
           status: 'pending',
+          payment_method: 'upi', // Explicitly set payment method
           shipping_address: shippingString,
           utr_reference: utr,
           payment_screenshot_url: screenshotUrl,
@@ -259,7 +260,7 @@ ${selectedAddr.alternate_phone ? `Alt Phone: ${selectedAddr.alternate_phone}` : 
       if (itemsError) throw itemsError;
 
       clearCart();
-      navigate('/orders');
+      navigate('/order/success');
     } catch (error: any) {
       alert("Error processing order: " + error.message);
     } finally {

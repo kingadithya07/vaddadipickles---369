@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { Order, UserProfile } from '../types';
-import { Package, Clock, CheckCircle, Truck } from 'lucide-react';
+import { Package, Clock, CheckCircle, Truck, XCircle, AlertCircle, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -48,10 +49,11 @@ export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'payment_pending': return 'bg-orange-100 text-orange-800';
       case 'approved': return 'bg-blue-100 text-blue-800';
       case 'shipped': return 'bg-purple-100 text-purple-800';
       case 'delivered': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -59,8 +61,10 @@ export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
   const getStatusIcon = (status: string) => {
     switch(status) {
       case 'pending': return <Clock size={16} />;
+      case 'payment_pending': return <AlertCircle size={16} />;
       case 'shipped': return <Truck size={16} />;
       case 'delivered': return <CheckCircle size={16} />;
+      case 'cancelled': return <XCircle size={16} />;
       default: return <Package size={16} />;
     }
   };
@@ -87,7 +91,7 @@ export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-2 ${getStatusColor(order.status)}`}>
                 {getStatusIcon(order.status)}
-                {order.status}
+                {order.status.replace('_', ' ')}
               </div>
             </div>
             <div className="p-6">
@@ -108,12 +112,20 @@ export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
                     <span className="text-green-600">-₹{order.discount_amount}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                   <div className="flex gap-2 items-center">
-                     <span className="font-semibold">Payment UTR:</span>
-                     <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">{order.utr_reference}</span>
+                <div className="flex justify-between items-center text-xs text-gray-500 mt-2">
+                   <div className="flex flex-col sm:flex-row gap-4 w-full justify-between sm:items-center">
+                     <div className="flex gap-2 items-center">
+                       <span className="font-semibold">Payment UTR:</span>
+                       <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">{order.utr_reference}</span>
+                       {order.payment_screenshot_url && <span className="text-green-600 flex items-center gap-1 ml-2"><CheckCircle size={12}/> Proof Uploaded</span>}
+                     </div>
+                     <Link 
+                       to={`/order/${order.id}/invoice`}
+                       className="flex items-center gap-1 text-brand-600 hover:text-brand-800 font-medium"
+                     >
+                       <FileText size={16} /> Invoice
+                     </Link>
                    </div>
-                   {order.payment_screenshot_url && <span className="text-green-600 flex items-center gap-1"><CheckCircle size={12}/> Proof Uploaded</span>}
                 </div>
               </div>
             </div>
