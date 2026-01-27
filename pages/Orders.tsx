@@ -11,7 +11,7 @@ export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
     if (!user) return;
 
     const fetchOrders = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('orders')
         .select(`
           *,

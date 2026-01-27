@@ -15,7 +15,7 @@ export const ProductDetail: React.FC = () => {
   useEffect(() => {
     const fetch = async () => {
       if (!id) return;
-      const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+      const { data } = await supabase.from('products').select('*').eq('id', id).single();
       if (data) setProduct(data);
       setLoading(false);
     };
