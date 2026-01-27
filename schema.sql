@@ -23,6 +23,44 @@ create table products (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- ADDRESSES TABLE
+create table addresses (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references profiles(id) on delete cascade not null,
+  name text not null,
+  phone text not null,
+  alternate_phone text,
+  address_line1 text not null,
+  address_line2 text,
+  city text not null,
+  state text not null,
+  pincode text not null,
+  is_default boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- COUPONS TABLE
+create table coupons (
+  id uuid default uuid_generate_v4() primary key,
+  code text not null unique,
+  discount_type text not null check (discount_type in ('percentage', 'fixed')),
+  discount_value numeric not null,
+  min_order_value numeric default 0,
+  is_active boolean default true,
+  expires_at timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- EXPENSES TABLE
+create table expenses (
+  id uuid default uuid_generate_v4() primary key,
+  description text not null,
+  amount numeric not null,
+  category text not null,
+  date date default current_date,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- ORDERS TABLE
 create table orders (
   id uuid default uuid_generate_v4() primary key,
@@ -32,6 +70,8 @@ create table orders (
   shipping_address text not null,
   utr_reference text,
   payment_screenshot_url text,
+  coupon_code text,
+  discount_amount numeric default 0,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -50,6 +90,9 @@ insert into storage.buckets (id, name, public) values ('payment-proofs', 'paymen
 -- ROW LEVEL SECURITY (RLS)
 alter table profiles enable row level security;
 alter table products enable row level security;
+alter table addresses enable row level security;
+alter table coupons enable row level security;
+alter table expenses enable row level security;
 alter table orders enable row level security;
 alter table order_items enable row level security;
 
@@ -63,6 +106,24 @@ create policy "Users can update own profile." on profiles for update using (auth
 create policy "Products are viewable by everyone." on products for select using (true);
 create policy "Admin can insert products" on products for insert with check (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
 create policy "Admin can update products" on products for update using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+
+-- Addresses: User manage own
+create policy "Users can view own addresses" on addresses for select using (auth.uid() = user_id);
+create policy "Users can insert own addresses" on addresses for insert with check (auth.uid() = user_id);
+create policy "Users can update own addresses" on addresses for update using (auth.uid() = user_id);
+create policy "Users can delete own addresses" on addresses for delete using (auth.uid() = user_id);
+
+-- Coupons: Viewable by everyone (for validation), Admin manage
+create policy "Coupons are viewable by everyone" on coupons for select using (true);
+create policy "Admins can insert coupons" on coupons for insert with check (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+create policy "Admins can update coupons" on coupons for update using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+create policy "Admins can delete coupons" on coupons for delete using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+
+-- Expenses: Admin manage only
+create policy "Admins can view expenses" on expenses for select using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+create policy "Admins can insert expenses" on expenses for insert with check (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+create policy "Admins can update expenses" on expenses for update using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
+create policy "Admins can delete expenses" on expenses for delete using (exists (select 1 from profiles where id = auth.uid() and role = 'admin'));
 
 -- Orders: User view own, Admin view all. User create. Admin update.
 create policy "Users can view own orders" on orders for select using (auth.uid() = user_id);
@@ -99,3 +160,8 @@ insert into products (name, description, price, category, image_url, stock) valu
 ('Gongura Pickle', 'Tangy sorrel leaves pickle, a signature Andhra delicacy.', 300, 'Gongura', 'https://images.unsplash.com/photo-1606923829579-0cb9d46a6db5?auto=format&fit=crop&q=80&w=600', 30),
 ('Lime Pickle', 'Sun-dried lime pickle aged to perfection.', 250, 'Lemon', 'https://images.unsplash.com/photo-1599307767316-77f8646b2b41?auto=format&fit=crop&q=80&w=600', 45),
 ('Tomato Pickle', 'Spicy tomato thokku suitable for rice and dosa.', 280, 'Tomato', 'https://images.unsplash.com/photo-1616645258469-ec681c17f3ee?auto=format&fit=crop&q=80&w=600', 40);
+
+-- SEED COUPONS
+insert into coupons (code, discount_type, discount_value, min_order_value, is_active) values
+('WELCOME10', 'percentage', 10, 500, true),
+('FLAT50', 'fixed', 50, 1000, true);

@@ -30,6 +30,8 @@ export interface Order {
   payment_screenshot_url?: string;
   created_at: string;
   items: OrderItem[];
+  coupon_code?: string;
+  discount_amount?: number;
 }
 
 export interface OrderItem {
@@ -37,4 +39,37 @@ export interface OrderItem {
   product_name: string;
   quantity: number;
   price: number;
+}
+
+export interface Address {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string;
+  alternate_phone?: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  is_default: boolean;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  min_order_value: number;
+  is_active: boolean;
+  expires_at?: string;
+}
+
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: 'Inventory' | 'Packaging' | 'Logistics' | 'Marketing' | 'Operations' | 'Salary' | 'Other';
+  date: string;
+  created_at: string;
 }

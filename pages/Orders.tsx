@@ -101,6 +101,21 @@ export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
                   </li>
                 ))}
               </ul>
+              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                {order.discount_amount && order.discount_amount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600 font-medium">Coupon applied ({order.coupon_code})</span>
+                    <span className="text-green-600">-₹{order.discount_amount}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                   <div className="flex gap-2 items-center">
+                     <span className="font-semibold">Payment UTR:</span>
+                     <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">{order.utr_reference}</span>
+                   </div>
+                   {order.payment_screenshot_url && <span className="text-green-600 flex items-center gap-1"><CheckCircle size={12}/> Proof Uploaded</span>}
+                </div>
+              </div>
             </div>
           </div>
         ))}

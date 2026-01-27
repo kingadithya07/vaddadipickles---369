@@ -39,6 +39,8 @@ const App: React.FC = () => {
       return;
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -49,8 +51,12 @@ const App: React.FC = () => {
     if (data) {
       setUser(data);
     } else {
-       // Temporary mock for new users in this demo context if trigger fails
-       setUser({ id: userId, email: '', role: 'customer' });
+       // Temporary mock for new users using session email
+       setUser({ 
+         id: userId, 
+         email: session?.user?.email || '', 
+         role: 'customer' 
+       });
     }
     setLoading(false);
   };
