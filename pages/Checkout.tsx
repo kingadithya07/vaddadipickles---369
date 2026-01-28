@@ -53,7 +53,7 @@ export const Checkout: React.FC<CheckoutProps> = ({ user }) => {
       setSavedAddresses(data);
       if (data.length > 0 && !selectedAddressId) {
         // Auto select default or first
-        const def = data.find(a => a.is_default);
+        const def = data.find((a: Address) => a.is_default);
         setSelectedAddressId(def ? def.id : data[0].id);
       } else if (data.length === 0) {
         setIsAddingNew(true);

@@ -34,8 +34,8 @@ export const Orders: React.FC<{ user: UserProfile }> = ({ user }) => {
     // Realtime subscription
     const subscription = supabase
       .channel('public:orders')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload) => {
-        setOrders(prev => prev.map(o => o.id === payload.new.id ? { ...o, ...payload.new } : o));
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload: any) => {
+        setOrders((prev: Order[]) => prev.map(o => o.id === payload.new.id ? { ...o, ...payload.new } : o));
       })
       .subscribe();
 
