@@ -1,9 +1,10 @@
+
 import { createClient } from '@supabase/supabase-js';
 
-// NOTE: In a real deployment, these should be environment variables.
-// Users must provide their own Supabase credentials.
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+// These keys were provided by the user.
+// In a production environment, you would use process.env or import.meta.env
+const supabaseUrl = 'https://egqyacmxppcxrjxwbgmp.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncXlhY214cHBjeHJqeHdiZ21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MTYzMTgsImV4cCI6MjA4NDk5MjMxOH0.NGXzrnPxHsU6BbIXd0wl9ebUggCfY43ve1LeMWuTVgs';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

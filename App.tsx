@@ -48,19 +48,17 @@ const App: React.FC = () => {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
-
     const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
     
-    // Fallback if profile doesn't exist yet (triggers usually handle this, but for safety)
     if (data) {
       setUser(data);
     } else {
-       // Temporary mock for new users using session email
+       // Profile might not exist yet if trigger hasn't finished
+       const { data: { session } } = await supabase.auth.getSession();
        setUser({ 
          id: userId, 
          email: session?.user?.email || '', 
@@ -70,7 +68,14 @@ const App: React.FC = () => {
     setLoading(false);
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center text-brand-600">Loading Vaddadi Pickles...</div>;
+  if (loading) return (
+    <div className="flex h-screen items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-brand-600 font-bold">Loading Vaddadi Pickles...</p>
+      </div>
+    </div>
+  );
 
   return (
     <CartProvider>
@@ -81,28 +86,31 @@ const App: React.FC = () => {
             <Route path="/shop" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
             <Route path="/auth/success" element={<AuthSuccess />} />
             <Route path="/auth/password-changed" element={<PasswordChanged />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/update-password" element={<UpdatePassword />} />
             
             {/* Protected Routes */}
-            <Route path="/checkout" element={user ? <Checkout user={user} /> : <Navigate to="/login" />} />
-            <Route path="/order/success" element={user ? <OrderSuccess /> : <Navigate to="/login" />} />
-            <Route path="/payment/status" element={user ? <PaymentStatus /> : <Navigate to="/login" />} />
-            <Route path="/orders" element={user ? <Orders user={user} /> : <Navigate to="/login" />} />
-            <Route path="/order/:id/invoice" element={user ? <OrderInvoice /> : <Navigate to="/login" />} />
-            <Route path="/order/:id/label" element={user?.role === 'admin' ? <ShippingLabel /> : <Navigate to="/" />} />
-            <Route path="/admin/bulk-labels" element={user?.role === 'admin' ? <BulkLabels /> : <Navigate to="/" />} />
+            <Route path="/checkout" element={user ? <Checkout user={user} /> : <Navigate to="/login" replace />} />
+            <Route path="/order/success" element={user ? <OrderSuccess /> : <Navigate to="/login" replace />} />
+            <Route path="/payment/status" element={user ? <PaymentStatus /> : <Navigate to="/login" replace />} />
+            <Route path="/orders" element={user ? <Orders user={user} /> : <Navigate to="/login" replace />} />
+            <Route path="/order/:id/invoice" element={user ? <OrderInvoice /> : <Navigate to="/login" replace />} />
+            <Route path="/order/:id/label" element={user?.role === 'admin' ? <ShippingLabel /> : <Navigate to="/" replace />} />
+            <Route path="/admin/bulk-labels" element={user?.role === 'admin' ? <BulkLabels /> : <Navigate to="/" replace />} />
             
             {/* Admin Route */}
-            <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
+            <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" replace />} />
             
             {/* Legal Pages */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+            
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>
       </HashRouter>

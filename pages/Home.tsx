@@ -1,26 +1,36 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { Product } from '../types';
 import { ProductCard } from '../components/ProductCard';
-import { ArrowRight, Star, Package, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Star, Package, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export const Home: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      // In a real app, you might have a 'featured' boolean column
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .limit(4);
-      
-      if (!error && data) {
-        setFeaturedProducts(data);
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .limit(4);
+        
+        if (error) throw error;
+        
+        if (data) {
+          setFeaturedProducts(data);
+        }
+      } catch (err: any) {
+        console.error("Error fetching products:", err);
+        setError(err.message || "Failed to load products. Make sure you have run the database schema.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchProducts();
   }, []);
@@ -55,20 +65,25 @@ export const Home: React.FC = () => {
       <section>
         <h2 className="text-2xl font-bold mb-6 text-gray-900">Explore by Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {['Mango', 'Lemon', 'Tomato', 'Gongura'].map((cat) => (
+          {[
+            { name: 'Mango', img: 'https://images.unsplash.com/photo-1616645258469-ec681c17f3ee?auto=format&fit=crop&q=80&w=400' },
+            { name: 'Lemon', img: 'https://images.unsplash.com/photo-1599307767316-77f8646b2b41?auto=format&fit=crop&q=80&w=400' },
+            { name: 'Tomato', img: 'https://images.unsplash.com/photo-1606923829579-0cb9d46a6db5?auto=format&fit=crop&q=80&w=400' },
+            { name: 'Gongura', img: 'https://images.unsplash.com/photo-1589135233689-d53f6804a37f?auto=format&fit=crop&q=80&w=400' }
+          ].map((cat) => (
             <Link 
-              key={cat} 
-              to={`/shop?cat=${cat.toLowerCase()}`}
+              key={cat.name} 
+              to={`/shop?cat=${cat.name.toLowerCase()}`}
               className="group relative h-32 rounded-xl overflow-hidden cursor-pointer"
             >
               <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition z-10"></div>
               <img 
-                src={`https://source.unsplash.com/random/400x300/?${cat},pickle,food`} 
-                alt={cat}
+                src={cat.img} 
+                alt={cat.name}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-500"
               />
               <div className="absolute inset-0 z-20 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">{cat}</span>
+                <span className="text-white font-bold text-xl">{cat.name}</span>
               </div>
             </Link>
           ))}
@@ -89,6 +104,18 @@ export const Home: React.FC = () => {
             {[1,2,3,4].map(i => (
               <div key={i} className="bg-gray-100 rounded-xl h-80 animate-pulse"></div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="bg-orange-50 border border-orange-200 p-8 rounded-2xl text-center">
+            <AlertTriangle className="mx-auto text-orange-500 mb-4" size={48} />
+            <p className="text-orange-900 font-semibold mb-2">Connection Issue</p>
+            <p className="text-orange-700 text-sm">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-700"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -27,6 +27,8 @@ export const Login: React.FC = () => {
             data: {
               full_name: fullName,
             },
+            // Ensure redirect points back to the app after email confirmation
+            emailRedirectTo: window.location.origin, 
           },
         });
         
@@ -135,6 +137,7 @@ export const Login: React.FC = () => {
         <p className="text-sm text-gray-600">
           {isRegistering ? 'Already have an account?' : "Don't have an account?"}
           <button 
+            type="button"
             onClick={() => {
               setIsRegistering(!isRegistering);
               setError('');
